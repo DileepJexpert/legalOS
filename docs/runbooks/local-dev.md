@@ -78,3 +78,15 @@ The seeded demo login is:
 - Background ingest is currently best-effort `BackgroundTasks`; the worker drain command is the supported recovery path until durable queue orchestration lands.
 - The court-intelligence slice uses bounded jobs in `apps/worker-ai`, but public-court ingestion still favors lawful feeds and user-assisted imports over automated access to protected portals.
 - Drafting is structured and deterministic; broader style fidelity will improve as the verified corpus expands.
+
+## Troubleshooting
+
+### `Permission denied` when running `make doctor` or `make bootstrap`
+
+If your checkout came from an archive or copied filesystem that dropped executable bits, re-enable them once:
+
+```bash
+chmod +x infra/scripts/bootstrap.sh infra/scripts/doctor.sh infra/scripts/resolve-python.sh
+```
+
+Then rerun `make doctor` and continue with setup.

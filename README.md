@@ -126,6 +126,9 @@ For a native Windows 10/11 walkthrough using PowerShell and Docker Desktop, use 
 8. If queued documents need recovery after a restart, run `make drain-queued`.
 9. If intelligence jobs remain queued, run `make drain-intelligence-jobs`.
 
+If you see `Permission denied` for scripts in `infra/scripts`, run:
+`chmod +x infra/scripts/bootstrap.sh infra/scripts/doctor.sh infra/scripts/resolve-python.sh` and retry.
+
 ### Core commands
 
 - `make lint`
