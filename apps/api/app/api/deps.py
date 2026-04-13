@@ -15,7 +15,7 @@ from app.repositories.users import UserRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
-_BYPASS_AUTH_EMAIL = "demo@legalos.local"
+_BYPASS_AUTH_EMAIL = "demo@legalos.dev"
 
 
 async def get_db_session(session: AsyncSession = Depends(get_session)) -> AsyncSession:
