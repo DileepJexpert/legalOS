@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Field, Input } from "@legalos/ui";
 import { setAuthToken } from "@/lib/auth";
 import { createBrowserApiClient } from "@/lib/api/client";
+
+const BYPASS_AUTH = process.env.NEXT_PUBLIC_BYPASS_AUTH === "true";
 
 export function LoginForm() {
   const router = useRouter();
@@ -13,6 +15,13 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // When auth is bypassed on the backend, skip the login form entirely.
+  useEffect(() => {
+    if (BYPASS_AUTH) {
+      router.replace("/matters");
+    }
+  }, [router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,6 +45,14 @@ export function LoginForm() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (BYPASS_AUTH) {
+    return (
+      <Card className="space-y-4 border-white/10 bg-white/5 p-6 backdrop-blur">
+        <p className="text-sm text-slate-300">Auth bypass is active — redirecting to workspace…</p>
+      </Card>
+    );
   }
 
   return (
