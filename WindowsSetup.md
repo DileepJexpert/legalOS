@@ -17,7 +17,7 @@ After completing this guide, the machine will be able to run:
 
 Demo login after seeding:
 
-- Email: `demo@legalos.local`
+- Email: `demo@legalos.dev`
 - Password: `DemoPass123!`
 
 ## 2. Before you start
@@ -330,7 +330,7 @@ When the dev server is ready, open:
 
 Use the seeded credentials:
 
-- Email: `demo@legalos.local`
+- Email: `demo@legalos.dev`
 - Password: `DemoPass123!`
 
 Then verify the main product flow:

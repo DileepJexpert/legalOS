@@ -35,7 +35,7 @@ async def db_session(tmp_path: Path) -> AsyncIterator[AsyncSession]:
 
         user = User(
             organization_id=organization.id,
-            email="demo@legalos.local",
+            email="demo@legalos.dev",
             full_name="Aditi Rao",
             password_hash=hash_password("DemoPass123!"),
             role=UserRole.ADMIN,

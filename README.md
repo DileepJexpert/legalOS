@@ -99,7 +99,7 @@ tests/
 
 ## Demo Credentials
 
-- Email: `demo@legalos.local`
+- Email: `demo@legalos.dev`
 - Password: `DemoPass123!`
 
 ## Local Setup

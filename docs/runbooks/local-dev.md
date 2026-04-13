@@ -35,7 +35,7 @@ Keep `AUTO_SEED_DEMO=false` unless you intentionally want startup-side demo writ
 
 The seeded demo login is:
 
-- `demo@legalos.local`
+- `demo@legalos.dev`
 - `DemoPass123!`
 
 ## Recommended Workflow

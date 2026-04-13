@@ -21,7 +21,7 @@ export function LoginForm() {
 
     try {
       const result = await api.login({
-        email,
+        email: email.trim(),
         password
       });
       setAuthToken(result.access_token);

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("court intelligence vertical slice smoke", async ({ page }) => {
   await page.goto("/login");
-  await page.getByLabel("Email address").fill("demo@legalos.local");
+  await page.getByLabel("Email address").fill("demo@legalos.dev");
   await page.getByLabel("Password").fill("DemoPass123!");
   await page.getByRole("button", { name: "Continue" }).click();
 

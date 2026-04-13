@@ -82,6 +82,33 @@ type ApiResult<T> =
   | { ok: true; data: T }
   | { ok: false; status: number; message: string };
 
+function formatValidationDetail(detail: unknown): string | null {
+  if (!Array.isArray(detail) || detail.length === 0) {
+    return null;
+  }
+
+  const message = detail
+    .map((item) => {
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+
+      const issue = item as { loc?: unknown; msg?: unknown };
+      const path = Array.isArray(issue.loc) ? issue.loc.slice(1).join(".") : null;
+      const text = typeof issue.msg === "string" ? issue.msg : null;
+
+      if (!text) {
+        return null;
+      }
+
+      return path ? `${path}: ${text}` : text;
+    })
+    .filter((item): item is string => Boolean(item))
+    .join("; ");
+
+  return message || null;
+}
+
 function resolveBaseUrl() {
   if (typeof window === "undefined") {
     return process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
@@ -125,13 +152,18 @@ export class LegalOsApiClient {
 
       if (!response.ok) {
         const error = ApiErrorSchema.safeParse(payload);
+        const validationMessage =
+          payload && typeof payload === "object" && "detail" in payload
+            ? formatValidationDetail((payload as { detail?: unknown }).detail)
+            : null;
         return {
           ok: false,
           status: response.status,
           message:
-            error.success
+            validationMessage ??
+            (error.success
               ? error.data.detail ?? error.data.message ?? response.statusText
-              : response.statusText
+              : response.statusText)
         };
       }
 

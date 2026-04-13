@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test("login, upload, and research search flow", async ({ page }) => {
   await page.goto("/login");
-  await page.getByLabel("Email address").fill("demo@legalos.local");
+  await page.getByLabel("Email address").fill("demo@legalos.dev");
   await page.getByLabel("Password").fill("DemoPass123!");
   await page.getByRole("button", { name: "Continue" }).click();
 
