@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     login_rate_limit_attempts: int = 5
     login_rate_limit_window_seconds: int = 300
 
+    # Set to true in local dev to skip token validation entirely.
+    # The API will resolve requests as the demo user (demo@legalos.local)
+    # or the first user in the database. Never enable outside development.
+    bypass_auth: bool = False
+
     cors_origins_raw: str = Field(default="http://localhost:3000", alias="CORS_ORIGINS")
     cors_methods_raw: str = Field(
         default="GET,POST,PUT,PATCH,DELETE,OPTIONS",
