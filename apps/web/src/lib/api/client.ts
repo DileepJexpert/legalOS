@@ -20,8 +20,10 @@ import {
   JobSchema,
   LoginRequestSchema,
   LoginResponseSchema,
+  MatterCreateRequestSchema,
   MatterDetailSchema,
   MatterExternalCaseListSchema,
+  MatterSummarySchema,
   MemorySnapshotSchema,
   MergedChronologyItemSchema,
   MatterListSchema,
@@ -57,6 +59,7 @@ import {
   type Job,
   type LoginRequest,
   type LoginResponse,
+  type MatterCreateRequest,
   type MatterDetail,
   type MatterExternalCaseList,
   type MemorySnapshot,
@@ -195,6 +198,19 @@ export class LegalOsApiClient {
 
   async getMatters(): Promise<ApiResult<MatterSummary[]>> {
     return this.request("/api/v1/matters", MatterListSchema);
+  }
+
+  async createMatter(payload: MatterCreateRequest): Promise<MatterSummary> {
+    const body = MatterCreateRequestSchema.parse(payload);
+    const result = await this.request("/api/v1/matters", MatterSummarySchema, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json" }
+    });
+    if (!result.ok) {
+      throw new ApiClientError(result.message, result.status);
+    }
+    return result.data;
   }
 
   async getMatter(matterId: string): Promise<ApiResult<MatterDetail>> {
