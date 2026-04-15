@@ -77,8 +77,11 @@ class IngestionService:
         self.bundle_repository = BundleRepository(session)
 
     async def ingest_upload(self, *, file: UploadFile, metadata: IngestionMetadata) -> Document:
+        logger.info("ingest_upload  file=%s  content_type=%s  matter=%s",
+                    file.filename, file.content_type, metadata.matter_id)
         payload = await self._read_upload_payload(file)
         file_name = self._safe_file_name(file.filename or f"upload-{uuid4()}")
+        logger.info("ingest_upload  read %d bytes  safe_name=%s", len(payload), file_name)
         return await self.ingest_bytes(
             payload=payload,
             file_name=file_name,
@@ -87,8 +90,10 @@ class IngestionService:
         )
 
     async def queue_upload(self, *, file: UploadFile, metadata: IngestionMetadata) -> Document:
+        logger.info("queue_upload  file=%s  matter=%s", file.filename, metadata.matter_id)
         payload = await self._read_upload_payload(file)
         file_name = self._safe_file_name(file.filename or f"upload-{uuid4()}")
+        logger.info("queue_upload  queued %d bytes  safe_name=%s", len(payload), file_name)
         return await self.queue_bytes(
             payload=payload,
             file_name=file_name,
@@ -154,6 +159,8 @@ class IngestionService:
         if document is None:
             raise ValueError("Document not found for processing")
 
+        logger.info("process_document  id=%s  file=%s  org=%s",
+                    document_id, document.file_name, organization_id)
         document.processing_status = ProcessingStatus.PROCESSING
         document.processing_error = None
         document.processing_started_at = datetime.now(UTC)
@@ -161,16 +168,22 @@ class IngestionService:
 
         try:
             payload = self.storage.read_bytes(document.storage_path)
+            logger.info("process_document  extracting  file=%s  size=%d  content_type=%s",
+                        document.file_name, len(payload), document.content_type)
             extracted = self.extractor.extract(
                 file_name=document.file_name,
                 content_type=document.content_type,
                 payload=payload,
             )
+            logger.info("process_document  extraction done  method=%s  text_chars=%d",
+                        extracted.extraction_method, len(extracted.text or ""))
             await self._clear_document_derivatives(document.id)
             created_spans = await self._materialize_document(
                 document=document,
                 extracted=extracted,
             )
+            logger.info("process_document  materialized  spans=%d  file=%s",
+                        len(created_spans), document.file_name)
             document.processing_status = ProcessingStatus.READY
             document.processing_completed_at = datetime.now(UTC)
             document.processing_error = None

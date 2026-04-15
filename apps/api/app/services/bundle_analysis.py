@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import logging
 import re
 from collections import Counter, defaultdict
+
+logger = logging.getLogger("legalos.bundle")
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from difflib import SequenceMatcher
@@ -77,8 +80,11 @@ class BundleAnalysisService:
         quote_spans: list[QuoteSpan],
     ) -> None:
         if document.matter_id is None:
+            logger.debug("materialize_bundle  skipped  doc=%s (no matter_id)", document.id)
             return
 
+        logger.info("materialize_bundle  start  doc=%s  matter=%s  spans=%d",
+                    document.id, document.matter_id, len(quote_spans))
         await self.repository.clear_document_artifacts(document.id)
         entity_keys: set[tuple[str, str, int]] = set()
         exhibit_keys: set[tuple[str, int]] = set()

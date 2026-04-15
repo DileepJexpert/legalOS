@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -17,6 +18,7 @@ from app.schemas.research import (
 from app.services.research import ResearchService
 
 router = APIRouter()
+logger = logging.getLogger("legalos.routes.research")
 
 
 @router.get("/search", response_model=ResearchSearchResponse)
@@ -30,6 +32,7 @@ async def search(
     session: AsyncSession = Depends(get_db_session),
     current_user=Depends(get_current_user),
 ) -> ResearchSearchResponse:
+    logger.info("search  matter=%s  q=%r  user=%s", matter_id, q, current_user.email)
     return await ResearchService(session).search(
         organization_id=current_user.organization_id,
         matter_id=matter_id,

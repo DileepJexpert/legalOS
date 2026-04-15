@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger("legalos.research")
 
 from app.domain.document import QuoteSpan
 from app.domain.enums import DocumentSourceType
@@ -39,6 +42,8 @@ class ResearchService:
         issue: str | None,
         limit: int,
     ) -> ResearchSearchResponse:
+        logger.info("search  matter=%s  query=%r  filters=(kind=%s court=%s issue=%s) limit=%s",
+                    matter_id, query, authority_kind, court, issue, limit)
         saved = await self.repository.get_saved_for_matter(
             matter_id=matter_id,
             organization_id=organization_id,
@@ -54,6 +59,7 @@ class ResearchService:
             limit=limit,
         )
 
+        logger.info("search returned %d results for query=%r", len(results), query)
         items = [
             ResearchSearchResult(
                 document_id=row.document.id,
@@ -95,6 +101,8 @@ class ResearchService:
         actor_user_id: UUID,
         request: SaveAuthorityRequest,
     ) -> SavedAuthorityResponse:
+        logger.info("save_authority  matter=%s  quote_span=%s  treatment=%s",
+                    matter_id, request.quote_span_id, request.treatment)
         matter = await self.matters.get_by_id(matter_id, organization_id)
         if matter is None:
             raise HTTPException(
