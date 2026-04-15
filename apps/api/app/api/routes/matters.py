@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -10,6 +11,7 @@ from app.repositories.matters import MatterRepository
 from app.schemas.matter import MatterDetailResponse, MatterSummaryResponse
 
 router = APIRouter()
+logger = logging.getLogger("legalos.routes.matters")
 
 
 @router.get("", response_model=list[MatterSummaryResponse])
@@ -19,6 +21,8 @@ async def list_matters(
     session: AsyncSession = Depends(get_db_session),
     current_user=Depends(get_current_user),
 ) -> list[MatterSummaryResponse]:
+    logger.info("list_matters  org=%s  limit=%d  offset=%d",
+                current_user.organization_id, limit, offset)
     matters = await MatterRepository(session).list_for_organization(
         current_user.organization_id,
         limit=limit,
@@ -48,8 +52,10 @@ async def get_matter(
     session: AsyncSession = Depends(get_db_session),
     current_user=Depends(get_current_user),
 ) -> MatterDetailResponse:
+    logger.info("get_matter  matter_id=%s  org=%s", matter_id, current_user.organization_id)
     matter = await MatterRepository(session).get_by_id(matter_id, current_user.organization_id)
     if matter is None:
+        logger.warning("get_matter  not found  matter_id=%s", matter_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Matter not found")
     return MatterDetailResponse(
         id=matter.id,

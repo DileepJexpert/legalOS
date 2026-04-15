@@ -7,6 +7,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import logging
+
 from app.core.config import get_settings
 from app.core.security import decode_access_token
 from app.db.session import get_session
@@ -14,6 +16,7 @@ from app.domain.user import User
 from app.repositories.users import UserRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
+logger = logging.getLogger("legalos.auth")
 
 _BYPASS_AUTH_EMAIL = "demo@legalos.dev"
 
@@ -30,12 +33,13 @@ async def get_current_user(
 
     if settings.bypass_auth:
         # Dev-only bypass: resolve as the demo user or the first user in DB.
-        # This never runs when bypass_auth is false (the default).
         user = await UserRepository(session).get_by_email(_BYPASS_AUTH_EMAIL)
         if user is None:
+            logger.debug("bypass_auth: demo user not found by email, falling back to first user")
             result = await session.execute(select(User).limit(1))
             user = result.scalar_one_or_none()
         if user is None:
+            logger.error("bypass_auth is enabled but no users exist — run: make seed")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=(
@@ -43,9 +47,12 @@ async def get_current_user(
                     "Run: make seed"
                 ),
             )
+        logger.debug("bypass_auth: resolved request as user=%s org=%s",
+                     user.email, user.organization_id)
         return user
 
     if credentials is None:
+        logger.warning("request rejected — no bearer token provided")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
@@ -55,6 +62,7 @@ async def get_current_user(
         subject = payload["sub"]
         user_id = UUID(subject)
     except Exception as exc:  # pragma: no cover - defensive guard
+        logger.warning("request rejected — invalid token: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid access token",
@@ -62,8 +70,10 @@ async def get_current_user(
 
     user = await UserRepository(session).get_by_id(user_id)
     if user is None:
+        logger.warning("request rejected — token subject %s not found in DB", user_id)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authenticated user not found",
         )
+    logger.debug("authenticated user=%s org=%s", user.email, user.organization_id)
     return user

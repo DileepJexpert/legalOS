@@ -44,8 +44,9 @@ class Settings(BaseSettings):
     login_rate_limit_window_seconds: int = 300
 
     # Set to true in local dev to skip token validation entirely.
-    # The API will resolve requests as the demo user (demo@legalos.local)
-    # or the first user in the database. Never enable outside development.
+    # In development mode this is forced to True automatically by the validator
+    # below, so you do not need to set it manually.
+    # Never enable outside development.
     bypass_auth: bool = False
 
     cors_origins_raw: str = Field(default="http://localhost:3000", alias="CORS_ORIGINS")
@@ -82,11 +83,17 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_runtime_safety(self) -> Settings:
         app_env = self.app_env.lower()
+        if app_env in {"development", "dev"}:
+            # In local development, auth bypass is always on so there is no
+            # login wall to deal with during iterative testing.
+            object.__setattr__(self, "bypass_auth", True)
         if app_env not in {"development", "dev", "test"}:
             if self.jwt_secret == "change-me-in-production":
                 raise ValueError("JWT_SECRET must be set outside development and test")
             if self.auto_create_db:
                 raise ValueError("AUTO_CREATE_DB must be false outside development and test")
+            if self.bypass_auth:
+                raise ValueError("BYPASS_AUTH must not be enabled outside development and test")
         return self
 
 

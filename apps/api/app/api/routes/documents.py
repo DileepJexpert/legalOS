@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from uuid import UUID
 
 from fastapi import (
@@ -26,6 +27,7 @@ from app.services.ingestion import (
 )
 
 router = APIRouter()
+logger = logging.getLogger("legalos.routes.documents")
 
 
 def _processing_stage(processing_status: ProcessingStatus) -> str:
@@ -106,6 +108,8 @@ async def upload_document(
         source_url=source_url,
     )
 
+    logger.info("upload  file=%s  size=%s  matter=%s  background=%s  user=%s",
+                file.filename, file.size, matter_id, process_in_background, current_user.email)
     if process_in_background:
         document = await service.queue_upload(file=file, metadata=metadata)
         background_tasks.add_task(
@@ -113,8 +117,10 @@ async def upload_document(
             document_id=document.id,
             organization_id=current_user.organization_id,
         )
+        logger.info("upload queued  doc_id=%s", document.id)
     else:
         document = await service.ingest_upload(file=file, metadata=metadata)
+        logger.info("upload processed  doc_id=%s  status=%s", document.id, document.processing_status)
 
     return _build_document_response(document)
 
