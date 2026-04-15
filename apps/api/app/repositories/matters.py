@@ -65,6 +65,35 @@ class MatterRepository:
             for row in result.all()
         ]
 
+    async def create(
+        self,
+        *,
+        organization_id: UUID,
+        owner_user_id: UUID,
+        title: str,
+        reference_code: str,
+        forum: str,
+        stage: str,
+        next_hearing_date: object | None,
+        summary: str | None,
+    ) -> Matter:
+        from app.domain.enums import MatterStage, MatterStatus
+        matter = Matter(
+            organization_id=organization_id,
+            owner_user_id=owner_user_id,
+            title=title,
+            reference_code=reference_code,
+            forum=forum,
+            stage=MatterStage(stage),
+            status=MatterStatus.ACTIVE,
+            next_hearing_date=next_hearing_date,
+            summary=summary,
+        )
+        self.session.add(matter)
+        await self.session.flush()
+        await self.session.refresh(matter)
+        return matter
+
     async def get_by_id(self, matter_id: UUID, organization_id: UUID) -> Matter | None:
         result = await self.session.execute(
             select(Matter)

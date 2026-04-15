@@ -8,10 +8,44 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db_session
 from app.repositories.matters import MatterRepository
-from app.schemas.matter import MatterDetailResponse, MatterSummaryResponse
+from app.schemas.matter import MatterCreateRequest, MatterDetailResponse, MatterSummaryResponse
 
 router = APIRouter()
 logger = logging.getLogger("legalos.routes.matters")
+
+
+@router.post("", response_model=MatterSummaryResponse, status_code=status.HTTP_201_CREATED)
+async def create_matter(
+    payload: MatterCreateRequest,
+    session: AsyncSession = Depends(get_db_session),
+    current_user=Depends(get_current_user),
+) -> MatterSummaryResponse:
+    logger.info("create_matter  title=%r  forum=%r  user=%s", payload.title, payload.forum, current_user.email)
+    matter = await MatterRepository(session).create(
+        organization_id=current_user.organization_id,
+        owner_user_id=current_user.id,
+        title=payload.title,
+        reference_code=payload.reference_code,
+        forum=payload.forum,
+        stage=payload.stage.value,
+        next_hearing_date=payload.next_hearing_date,
+        summary=payload.summary,
+    )
+    await session.commit()
+    logger.info("create_matter  created  matter_id=%s", matter.id)
+    return MatterSummaryResponse(
+        id=matter.id,
+        title=matter.title,
+        reference_code=matter.reference_code,
+        forum=matter.forum,
+        stage=matter.stage,
+        status=matter.status,
+        next_hearing_date=matter.next_hearing_date,
+        summary=matter.summary,
+        updated_at=matter.updated_at,
+        document_count=0,
+        saved_authority_count=0,
+    )
 
 
 @router.get("", response_model=list[MatterSummaryResponse])

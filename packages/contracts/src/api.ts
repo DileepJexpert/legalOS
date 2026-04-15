@@ -81,6 +81,15 @@ export const MatterDetailSchema = MatterSummarySchema.extend({
 
 export const MatterListSchema = z.array(MatterSummarySchema);
 
+export const MatterCreateRequestSchema = z.object({
+  title: z.string().min(2).max(255),
+  reference_code: z.string().min(1).max(64),
+  forum: z.string().min(2).max(255),
+  stage: MatterStageSchema.default("pre_filing"),
+  next_hearing_date: z.string().nullable().optional(),
+  summary: z.string().nullable().optional()
+});
+
 export const DocumentResponseSchema = z.object({
   id: z.string().uuid(),
   matter_id: z.string().uuid().nullable(),
@@ -316,6 +325,7 @@ export type DocumentSourceType = z.infer<typeof DocumentSourceTypeSchema>;
 export type EntityType = z.infer<typeof EntityTypeSchema>;
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
+export type MatterCreateRequest = z.infer<typeof MatterCreateRequestSchema>;
 export type MatterDetail = z.infer<typeof MatterDetailSchema>;
 export type MatterSummary = z.infer<typeof MatterSummarySchema>;
 export type ProcessingStatus = z.infer<typeof ProcessingStatusSchema>;
